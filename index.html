@@ -27,6 +27,8 @@
   </style>
 </head>
 <body>
+  <div id="fb-root"></div>
+<script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v22.0&appId=1313370613254538"></script>
   <h1>Facebook Post Extractor</h1>
 
   <label for="pageId">Page/User ID:</label>
@@ -43,7 +45,7 @@
 
   <button id="extractButton">Extract Posts</button>
   <div id="loading">Loading...</div>
-
+<div class="fb-login-button" data-width="" data-size="" data-button-type="" data-layout="" data-auto-logout-link="false" data-use-continue-as="false"></div>
   <div id="results"></div>
 
   <script>
