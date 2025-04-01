@@ -69,6 +69,10 @@
    }(document, 'script', 'facebook-jssdk'));
 
     
+FB.getLoginStatus(function(response) {
+    statusChangeCallback(response);
+});
+    
     async function extractFacebookPosts(pageId, accessToken, sinceTimestamp, untilTimestamp) {
       try {
         const apiUrl = `https://graph.facebook.com/v18.0/${pageId}/posts`; // Adjust API version as needed
