@@ -42,12 +42,25 @@
   <label for="untilDate">Until Date:</label>
   <input type="date" id="untilDate"><br><br>
 
+  
+<fb:login-button 
+  config_id="{config_id}"
+  onlogin="checkLoginState();">
+</fb:login-button>
+
   <button id="extractButton">Extract Posts</button>
   <div id="loading">Loading...</div>
 
   <div id="results"></div>
 
   <script>
+
+function checkLoginState() {
+  FB.getLoginStatus(function(response) {
+    statusChangeCallback(response);
+  });
+}
+    
   window.fbAsyncInit = function() {
     FB.init({
       appId      : '{your-app-id}',
