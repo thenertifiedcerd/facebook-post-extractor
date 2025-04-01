@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  
   <title>Facebook Post Extractor</title>
   <style>
     body {
@@ -28,6 +29,8 @@
   </style>
 </head>
 <body>
+  <div id="fb-root"></div>
+<script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v22.0&appId=1313370613254538"></script>
   <h1>Facebook Post Extractor</h1>
 
   <label for="pageId">Page/User ID:</label>
@@ -47,6 +50,8 @@
   config_id="{config_id}"
   onlogin="checkLoginState();">
 </fb:login-button>
+
+  <div class="fb-login-button" data-width="100%" data-size="" data-button-type="" data-layout="" data-auto-logout-link="true" data-use-continue-as="true"></div>
 
   <button id="extractButton">Extract Posts</button>
   <div id="loading">Loading...</div>
