@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-  
   <title>Facebook Post Extractor</title>
   <style>
     body {
@@ -25,12 +24,9 @@
     #loading {
       display: none;
     }
-
   </style>
 </head>
 <body>
-  <div id="fb-root"></div>
-<script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v22.0&appId=1313370613254538"></script>
   <h1>Facebook Post Extractor</h1>
 
   <label for="pageId">Page/User ID:</label>
@@ -45,26 +41,12 @@
   <label for="untilDate">Until Date:</label>
   <input type="date" id="untilDate"><br><br>
 
-
-  <div class="fb-login-button" data-width="100%" data-size="" data-button-type="" data-layout="" data-auto-logout-link="true" data-use-continue-as="true"><button
-  config_id="{config_id}"
-  onlogin="checkLoginState();">
-    Continue
-</button></div>
-
   <button id="extractButton">Extract Posts</button>
   <div id="loading">Loading...</div>
 
   <div id="results"></div>
 
   <script>
-
-function checkLoginState() {
-  FB.getLoginStatus(function(response) {
-    statusChangeCallback(response);
-  });
-}
-    
   window.fbAsyncInit = function() {
     FB.init({
       appId      : '{your-app-id}',
@@ -74,93 +56,100 @@ function checkLoginState() {
     });
       
     FB.AppEvents.logPageView();   
-      
   };
 
   (function(d, s, id){
-     var js, fjs = d.getElementsByTagName(s)[0];
-     if (d.getElementById(id)) {return;}
-     js = d.createElement(s); js.id = id;
-     js.src = "https://connect.facebook.net/en_US/sdk.js";
-     fjs.parentNode.insertBefore(js, fjs);
-   }(document, 'script', 'facebook-jssdk'));
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) { return; }
+    js = d.createElement(s); js.id = id;
+    js.src = "https://connect.facebook.net/en_US/sdk.js";
+    fjs.parentNode.insertBefore(js, fjs);
+  }(document, 'script', 'facebook-jssdk'));
 
+  // Ensure the SDK is loaded before using FB
+  function checkFBInit() {
+    if (window.FB) {
+      FB.getLoginStatus(function(response) {
+        statusChangeCallback(response);
+      });
+    } else {
+      setTimeout(checkFBInit, 100);
+    }
+  }
+
+  checkFBInit();
     
-FB.getLoginStatus(function(response) {
-    statusChangeCallback(response);
-});
-    
-    async function extractFacebookPosts(pageId, accessToken, sinceTimestamp, untilTimestamp) {
-      try {
-        const apiUrl = `https://graph.facebook.com/v18.0/${pageId}/posts`; // Adjust API version as needed
+  async function extractFacebookPosts(pageId, accessToken, sinceTimestamp, untilTimestamp) {
+    try {
+      const apiUrl = `https://graph.facebook.com/v18.0/${pageId}/posts`; // Adjust API version as needed
 
-        let posts = [];
-        let nextUrl = `${apiUrl}?access_token=${accessToken}&since=${sinceTimestamp}&until=${untilTimestamp}&fields=id,message,created_time,full_picture,permalink_url`; //Add the required fields.
+      let posts = [];
+      let nextUrl = `${apiUrl}?access_token=${accessToken}&since=${sinceTimestamp}&until=${untilTimestamp}&fields=id,message,created_time,full_picture,permalink_url`; // Add the required fields.
 
-        while (nextUrl) {
-          const response = await fetch(nextUrl);
+      while (nextUrl) {
+        const response = await fetch(nextUrl);
 
-          if (!response.ok) {
-            throw new Error(`Facebook API Error: ${response.status} - ${response.statusText}`);
-          }
-
-          const data = await response.json();
-
-          if (data.data) {
-            posts = posts.concat(data.data);
-          }
-
-          nextUrl = data.paging && data.paging.next; // Check for pagination
+        if (!response.ok) {
+          throw new Error(`Facebook API Error: ${response.status} - ${response.statusText}`);
         }
 
-        return posts;
+        const data = await response.json();
 
-      } catch (error) {
-        console.error("Error extracting Facebook posts:", error);
-        return []; // Return an empty array on error
+        if (data.data) {
+          posts = posts.concat(data.data);
+        }
+
+        nextUrl = data.paging && data.paging.next; // Check for pagination
       }
+
+      return posts;
+
+    } catch (error) {
+      console.error("Error extracting Facebook posts:", error);
+      return []; // Return an empty array on error
+    }
+  }
+
+  document.getElementById("extractButton").addEventListener("click", async () => {
+    const pageId = document.getElementById("pageId").value;
+    const accessToken = document.getElementById("accessToken").value;
+    const sinceDate = document.getElementById("sinceDate").value;
+    const untilDate = document.getElementById("untilDate").value;
+
+    if (!pageId || !accessToken || !sinceDate || !untilDate) {
+      alert("Please fill in all fields.");
+      return;
     }
 
-    document.getElementById("extractButton").addEventListener("click", async () => {
-      const pageId = document.getElementById("pageId").value;
-      const accessToken = document.getElementById("accessToken").value;
-      const sinceDate = document.getElementById("sinceDate").value;
-      const untilDate = document.getElementById("untilDate").value;
+    const sinceTimestamp = Math.floor(new Date(sinceDate + "T00:00:00Z").getTime() / 1000);
+    const untilTimestamp = Math.floor(new Date(untilDate + "T00:00:00Z").getTime() / 1000);
 
-      if (!pageId || !accessToken || !sinceDate || !untilDate) {
-        alert("Please fill in all fields.");
-        return;
-      }
+    document.getElementById("loading").style.display = "block";
+    document.getElementById("results").innerHTML = "";
 
-      const sinceTimestamp = Math.floor(new Date(sinceDate + "T00:00:00Z").getTime() / 1000);
-      const untilTimestamp = Math.floor(new Date(untilDate + "T00:00:00Z").getTime() / 1000);
+    const posts = await extractFacebookPosts(pageId, accessToken, sinceTimestamp, untilTimestamp);
 
-      document.getElementById("loading").style.display = "block";
-      document.getElementById("results").innerHTML = "";
+    document.getElementById("loading").style.display = "none";
 
-      const posts = await extractFacebookPosts(pageId, accessToken, sinceTimestamp, untilTimestamp);
+    if (posts.length > 0) {
+      const resultsDiv = document.getElementById("results");
+      posts.forEach(post => {
+        const postDiv = document.createElement("div");
+        postDiv.className = "post";
 
-      document.getElementById("loading").style.display = "none";
-
-      if (posts.length > 0) {
-        const resultsDiv = document.getElementById("results");
-        posts.forEach(post => {
-          const postDiv = document.createElement("div");
-          postDiv.className = "post";
-
-          postDiv.innerHTML = `
-            <p><strong>Post ID:</strong> ${post.id}</p>
-            <p><strong>Message:</strong> ${post.message ? post.message : "No message"}</p>
-            <p><strong>Created Time:</strong> ${post.created_time}</p>
-            ${post.full_picture ? `<img src="${post.full_picture}" alt="Post Image">` : ""}
-            <p><a href="${post.permalink_url}" target="_blank">Permalink</a></p>
-          `;
-          resultsDiv.appendChild(postDiv);
-        });
-      } else {
-        document.getElementById("results").innerHTML = "<p>No posts found or an error occurred.</p>";
-      }
-    });
+        postDiv.innerHTML = `
+          <p><strong>Post ID:</strong> ${post.id}</p>
+          <p><strong>Message:</strong> ${post.message ? post.message : "No message"}</p>
+          <p><strong>Created Time:</strong> ${post.created_time}</p>
+          ${post.full_picture ? `<img src="${post.full_picture}" alt="Post Image">` : ""}
+          <p><a href="${post.permalink_url}" target="_blank">Permalink</a></p>
+        `;
+        resultsDiv.appendChild(postDiv);
+      });
+    } else {
+      document.getElementById("results").innerHTML = "<p>No posts found or an error occurred.</p>";
+    }
+  });
   </script>
 </body>
 </html>
